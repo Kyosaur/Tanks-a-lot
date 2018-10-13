@@ -6,44 +6,32 @@ using UnityEngine.EventSystems;
 using UnityEngine.Networking.Match;
 using UnityEngine.UI;
 
-[System.Serializable]
-public class MyIntEvent : UnityEvent<ServerListItem>
-{
-}
 
 
-public class ServerListItem : MonoBehaviour {
-
-  
+public class ServerListItem : MonoBehaviour
+{  
     [SerializeField] private Text m_ServerListItemText;
 
     public delegate void SelectServerDelegate(ServerListItem match);
     private SelectServerDelegate m_OnSelectCallback;
 
-    MatchInfoSnapshot m_Server;
-    GameObject m_ListObject;
 
-    string m_ServerName;
-    string m_MapName;
+    private GameObject m_ListObject;
+    private Server m_Server;
 
-    int m_PlayerCount;
-    int m_MaxPlayers;
 
     public void Setup(MatchInfoSnapshot match, GameObject listObject, SelectServerDelegate onSelectCallback)
     {
         m_OnSelectCallback = onSelectCallback;
-
-        m_Server = match;
-
-        m_MapName = "Forest";
-
         m_ListObject = listObject;
-        m_ServerName = match.name;
 
-        m_PlayerCount = match.currentSize;
-        m_MaxPlayers = match.maxSize;
+        Debug.Log("SLI setup:: match net id = " + match.networkId);
+        m_Server = null;// JsonUtility.FromJson < Server > (GameManager.Instance.CmdGetServer(match.networkId));
+    
 
-        m_ServerListItemText.text = m_ServerName + " (" + m_PlayerCount + "/" + m_MaxPlayers + ")";
+        Debug.Log("SLI m_server = " + match.networkId);
+
+        m_ServerListItemText.text = match.name + " (" + match.currentSize + "/" + match.maxSize + ")";
     }
 
     public void OnClicked()
@@ -52,52 +40,16 @@ public class ServerListItem : MonoBehaviour {
     }
 
 
-    public int GetMaxPlayerCount()
-    {
-        if (m_Server != null)
-        {
-            return m_Server.maxSize;
-        }
-        return 0;
-    }
-
-    public int GetPlayerCount()
-    {
-        if (m_Server != null)
-        {
-            return m_Server.currentSize;
-        }
-        return 0;
-    }
 
     public GameObject GetListObject()
     {
         return m_ListObject;
     }
 
-    public MatchInfoSnapshot GetServer()
+    public Server GetServer()
     {
         return m_Server;
     }
 
-    public void SetServerName(string name)
-    {
-        m_ServerName = name;
-    }
-
-	public string GetServerName()
-    {
-        return m_ServerName;
-    }
-
-    public void SetMapName(string name)
-    {
-        m_MapName = name;
-    }
-
-    public string GetMapName()
-    {
-        return m_MapName;
-    }
 	
 }

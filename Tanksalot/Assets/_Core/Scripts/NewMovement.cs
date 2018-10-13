@@ -24,16 +24,18 @@ public class NewMovement : NetworkBehaviour
 
     [Header("Movement Control")]
     //Movement speed controls...since one is a rotation (degrees) and the other is not, their values wont match up to well.
-    public float m_Speed = 10f;
-    public float m_RotateSpeed = 90f;
+    [SerializeField] private float m_Speed = 10f;
+    [SerializeField] private float m_RotateSpeed = 90f;
 
     [Space(10)]
-    public bool m_InvertReverseTurning = true;
-    public bool m_SmoothTransitions = true;
+    [SerializeField] private bool m_InvertReverseTurning = true;
+    [SerializeField] private bool m_SmoothTransitions = true;
 
     [Space(10)]
-    public bool m_DisableOnFlip = true;
+    [SerializeField] private bool m_DisableOnFlip = true;
 
+    private float m_Direction;
+    private bool m_DirectionalLock = false;
 
 
 
@@ -70,13 +72,67 @@ public class NewMovement : NetworkBehaviour
         float vertical = CrossPlatformInputManager.GetAxis("Vertical");
 
 
+        if (vertical < 0) vertical *= -1;
+
+        //"Smooth" transitions is simply a temporary fix to a problem that comes from inverting reverse turning while using joysticks. 
+        //We invert turning due to wanting the movements in reverse to behave like a vehicle. Without invert reverse turning a
+        //forward+left = left turn, but reverse+left equals a right turn (Think of a X/Y graph in math using an arrow (vector) and it makes sense why)
+
+        //this quick fix simply sets the "range" (see IgnoreUntilVal) of the joystick we'll allow until we transition to reverse. Without it, you could
+        //accidently switch to reversing if you over rotate the joystick around while turning (bringing the vertical value to negatives).
+
+
+
+
+        /* This version has a small range in which it will allow reverse 
+         *
+         * if (m_InvertReverseTurning && m_SmoothTransitions)
+          {
+              //if (vertical <= 0 && vertical > -0.6) vertical *= -1;
+
+              if(vertical <= 0) //Is player reversing?
+              {
+                  //this is a RANGE:  -ingoreUntilVal  to  ignoreUntilVal
+                  float ignoreUntilVal = 0.8f;
+
+                  if((horizontal >= -(ignoreUntilVal) && horizontal <= ignoreUntilVal) == false)
+                  {
+                      //Not in the range...NO reversing. Flip movement to positive 
+                      vertical *= -1;
+                  }
+              }
+
+          }*/
+
+
+        /*
+         * This version locks moving directions until you lift up on the joystick.
+         * 
         if (m_SmoothTransitions)
         {
-            if (vertical <= 0 && vertical > -0.6) vertical *= -1;
-        }
+            bool isMoving = ((vertical > 0.1 || vertical < -0.1) || (horizontal > 0.1 || horizontal < -0.1)) ? true : false;
+
+            if (isMoving)
+            {
+                if (m_DirectionalLock == false)
+                {
+                    m_DirectionalLock = true;
+                    m_Direction = vertical;
+                }
+                else
+                {
+                    if (m_Direction > 0) vertical = (vertical > 0) ? vertical : vertical *= -1; 
+                    else vertical = (vertical < 0) ? vertical : vertical *= -1;
+                }
+            }
+            else m_DirectionalLock = false;
+        }   */
+
+
+
 
         //pass movement values to animator
-//        m_Animator.SetFloat("Turn", horizontal);
+        m_Animator.SetFloat("Turn", horizontal);
         m_Animator.SetFloat("Move", vertical);
 
 
@@ -102,6 +158,26 @@ public class NewMovement : NetworkBehaviour
         m_Object.MoveRotation(m_Object.rotation * deltaRotation);
 
 
+    }
+
+    public void SetSpeed(float speed)
+    {
+        m_Speed = speed;
+    }
+
+    public float GetSpeed()
+    {
+        return m_Speed;
+    }
+
+    public void SetRotateSpeed(float speed)
+    {
+        m_RotateSpeed = speed;
+    }
+
+    public float GetRotateSpeed()
+    {
+        return m_RotateSpeed;
     }
 
 

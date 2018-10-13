@@ -15,21 +15,22 @@ public class Player : NetworkBehaviour
 
     public void Start()
     {
-  
-        if (!isLocalPlayer) return;
 
-        Debug.Log("PlayerObject::Start -- Spawning my own personal tank");
+        if (isLocalPlayer)
+        {
+            Debug.Log("PlayerObject::Start -- Spawning my own personal tank");
 
-        int netID = (int)GetComponent<NetworkIdentity>().netId.Value;
-        GameManager.RegisterPlayer(netID, this);
+            int netID = (int)GetComponent<NetworkIdentity>().netId.Value;
 
-        Debug.Log("Scene count: " + NetworkManager.singleton.startPositions.Count);
 
-        // Transform spawn = NetworkManager.singleton.GetStartPosition();
-        // CmdSpawnPlayer(spawn.position, spawn.rotation);
+            Debug.Log("Scene count: " + NetworkManager.singleton.startPositions.Count);
 
-        
-        CmdSpawnPlayer(this.transform.position, this.transform.rotation);
+            // Transform spawn = NetworkManager.singleton.GetStartPosition();
+            // CmdSpawnPlayer(spawn.position, spawn.rotation);
+
+
+            CmdSpawnPlayer(this.transform.position, this.transform.rotation);
+        }
     }
 
 

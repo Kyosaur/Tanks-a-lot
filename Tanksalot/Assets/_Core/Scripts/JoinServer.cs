@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Networking.Match;
+using UnityEngine.Networking.Types;
 using UnityEngine.UI;
 
 public class JoinServer : NetworkBehaviour
@@ -74,7 +75,6 @@ public class JoinServer : NetworkBehaviour
                 GameObject serverListItem = Instantiate(m_ServerListItemPrefab);
                 serverListItem.transform.SetParent(m_ServerListParent, false);
 
-                //Maybe channge it so m_ServerList uses ServerListItem in the future VS having ServerListItem as a componenet on UI element
                 ServerListItem sli = serverListItem.GetComponent<ServerListItem>();
                 if(sli != null)
                 {
@@ -82,7 +82,7 @@ public class JoinServer : NetworkBehaviour
 
                     if (executedOnce == false)
                     {
-                        AddAllServerDetails(sli);
+                        AddAllServerDetails(sli.GetServer());
                         executedOnce = true;
 
                     }
@@ -94,8 +94,6 @@ public class JoinServer : NetworkBehaviour
 
     public void OnClickJoin()
     {
-        Debug.Log("Clicked join");
-
         if (m_CurrentlySelected != null)
         {
             Debug.Log("CurrentlySelected not null");
@@ -103,17 +101,17 @@ public class JoinServer : NetworkBehaviour
             if (m_CurrentlySelected.GetServer() == null) Debug.Log("GetServer NULL");
        
 
-            m_NetworkManager.matchMaker.JoinMatch(m_CurrentlySelected.GetServer().networkId, "", "", "", 0, 0, m_NetworkManager.OnMatchJoined);
+            m_NetworkManager.matchMaker.JoinMatch((NetworkID) m_CurrentlySelected.GetServer().GetServerID(), "", "", "", 0, 0, m_NetworkManager.OnMatchJoined);
         }
     }
 
-    public void AddAllServerDetails(ServerListItem sli)
+    public void AddAllServerDetails(Server s)
     {
-        AddServerDetail("Name:", sli.GetServerName());
+        AddServerDetail("Name:", s.GetServerName());
         AddServerDetail("", "");
-        AddServerDetail("Map:", sli.GetMapName());
-        AddServerDetail("Player Count:", sli.GetPlayerCount().ToString());
-        AddServerDetail("Max Players:", sli.GetMaxPlayerCount().ToString());
+        AddServerDetail("Map:", s.GetMapName());
+        AddServerDetail("Player Count:", s.GetPlayerCount().ToString());
+        AddServerDetail("Max Players:", s.GetMaxPlayerCount().ToString());
     }
 
     private void AddServerDetail(string rule, string result)
@@ -135,6 +133,7 @@ public class JoinServer : NetworkBehaviour
         serverDetailsItem.transform.SetParent(m_ServerDetailsParent, false);
 
     }
+
     public void OnServerSelected(ServerListItem selected)
     {
         Debug.Log("OnServerSelected");
@@ -149,7 +148,7 @@ public class JoinServer : NetworkBehaviour
         ColorServerListItem(m_CurrentlySelected, m_SelectedListItemColor);
 
         ClearServerDetailsList();
-        AddAllServerDetails(m_CurrentlySelected);
+        AddAllServerDetails(m_CurrentlySelected.GetServer());
         
     }
 
