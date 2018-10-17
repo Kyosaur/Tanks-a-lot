@@ -21,7 +21,7 @@ public class Player : MonoBehaviourPun
         {
             Debug.Log("PlayerObject::Start -- Spawning my own personal tank");
             PhotonNetwork.Instantiate(m_PlayerTankPrefab.name, this.transform.position, this.transform.rotation);
-            Debug.Log("after tank instantiate");
+
         }
 
     }

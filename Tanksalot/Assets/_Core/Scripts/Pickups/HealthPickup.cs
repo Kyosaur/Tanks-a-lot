@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HealthPickup : MonoBehaviour {
+public class HealthPickup : MonoBehaviourPun {
 
     public float m_HealAmount = 50f;
     
@@ -25,10 +26,16 @@ public class HealthPickup : MonoBehaviour {
                 obj.m_Health += m_HealAmount;
                 obj.ForceHealthUpdate();
 
-                this.gameObject.SetActive(false);
+                this.photonView.RPC("HealthPickupDestroy", RpcTarget.MasterClient);
             }
         }
         
+    }
+
+    [PunRPC]
+    public void HealthPickupDestroy()
+    {
+        PhotonNetwork.Destroy(this.gameObject);
     }
 
 

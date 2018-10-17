@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ArmourPickup : MonoBehaviour {
+public class ArmourPickup : MonoBehaviourPun {
 
     public float m_ArmourAmount = 50f;
 
@@ -23,10 +24,17 @@ public class ArmourPickup : MonoBehaviour {
                 obj.m_Armour += m_ArmourAmount;
                 obj.ForceHealthUpdate();
 
-                this.gameObject.SetActive(false);
+                this.photonView.RPC("ArmourPickupDestroy", RpcTarget.MasterClient);
+
             }
         }
 
+    }
+
+    [PunRPC]
+    public void ArmourPickupDestroy()
+    {
+        PhotonNetwork.Destroy(this.gameObject);
     }
 
 }

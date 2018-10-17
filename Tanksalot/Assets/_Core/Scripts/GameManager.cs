@@ -7,18 +7,39 @@ public class GameManager : MonoBehaviourPunCallbacks
 {
     [SerializeField] private GameObject m_PlayerObjectPrefab;
     [SerializeField] private string m_SpawnPointTag;
+    [SerializeField] private string m_SceneObjectTag;
 
 
     private GameObject[] m_SpawnPoints;
+    private GameObject[] m_SceneObjects;
 
 	// Use this for initialization
 	void Awake ()
     {
-        m_SpawnPoints = GameObject.FindGameObjectsWithTag("SpawnPoint");
+        m_SpawnPoints = GameObject.FindGameObjectsWithTag(m_SpawnPointTag);
+        m_SceneObjects = GameObject.FindGameObjectsWithTag(m_SceneObjectTag);
+
 	}
 
     public void Start()
     {
+
+        if (m_SceneObjects != null)
+        {
+            foreach(GameObject obj in m_SceneObjects)
+            {
+
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    string name = obj.name.Split(' ')[0];
+                    PhotonNetwork.InstantiateSceneObject(name, obj.transform.position, obj.transform.rotation);
+                }
+                obj.gameObject.SetActive(false);
+
+            }
+
+        }
+
         if (m_SpawnPoints != null && m_SpawnPoints.Length > 0)
         {
             Debug.Log("Trying to instantiate...");
@@ -28,4 +49,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else Debug.Log("EMPTY SPAWN ARRAY, DUMMY!!!");
     }
+
+
 }

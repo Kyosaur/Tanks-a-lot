@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RepairPickup : MonoBehaviour {
+public class RepairPickup : MonoBehaviourPun {
 
 	// Use this for initialization
 	void Start () {
@@ -27,9 +28,16 @@ public class RepairPickup : MonoBehaviour {
 
                 obj.ForceHealthUpdate();
 
-                this.gameObject.SetActive(false);
+                this.photonView.RPC("RepairPickupDestroy", RpcTarget.MasterClient);
             }
         }
+
+    }
+
+    [PunRPC]
+    public void RepairPickupDestroy()
+    {
+        PhotonNetwork.Destroy(this.gameObject);
 
     }
 

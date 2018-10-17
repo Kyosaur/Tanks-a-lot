@@ -63,18 +63,13 @@ public class Tank : Damagable
     {
         base.Start();
 
-        Debug.Log("tank start");
         if(photonView.IsMine)
         {
-            Debug.Log("Tank is mine");
             GameObject c = GameObject.FindGameObjectWithTag("MainCamera");
             if (c != null)
             {
-                Debug.Log("Camera isnt null...disable");
                 c.SetActive(false);
             }
-
-            if (m_Camera == null) Debug.Log("NO CAMERA NOOB");
 
             m_Camera.gameObject.tag = "MainCamera";
             m_Camera.gameObject.SetActive(true);

@@ -30,4 +30,9 @@ MonoBehaviour:
   RpcList:
   - RpcAim
   - RpcFire
+  - DestroyPickup
+  - ArmourPickupDestroy
+  - HealthPickupDestroy
+  - RepairPickupDestroy
+  - DestroyOriginalSceneObject
   DisableAutoOpenWizard: 1
