@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -13,7 +14,7 @@ using UnityStandardAssets.CrossPlatformInput;
 
 
 
-public class NewMovement : NetworkBehaviour
+public class NewMovement : MonoBehaviourPun
 {
 
     //This script uses physics to move, so what ever its attached to NEEDS to have a rigidbody 
@@ -57,106 +58,105 @@ public class NewMovement : NetworkBehaviour
     void FixedUpdate()
     {
 
-        if (!hasAuthority) return;
-
-
-        if (m_DisableOnFlip)
+        if (photonView.IsMine)
         {
-            if (Vector3.Dot(transform.up, Vector3.up) < 0) return;
-        }
 
-     
-
-        //Getting our WASD using GetAxis. Doing it this way allows arrow keys, controllers, and joysticks.....vs  Input.GetButtonDown  being statically tied to W, A, S, and D only.
-        float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
-        float vertical = CrossPlatformInputManager.GetAxis("Vertical");
-
-
-        if (vertical < 0) vertical *= -1;
-
-        //"Smooth" transitions is simply a temporary fix to a problem that comes from inverting reverse turning while using joysticks. 
-        //We invert turning due to wanting the movements in reverse to behave like a vehicle. Without invert reverse turning a
-        //forward+left = left turn, but reverse+left equals a right turn (Think of a X/Y graph in math using an arrow (vector) and it makes sense why)
-
-        //this quick fix simply sets the "range" (see IgnoreUntilVal) of the joystick we'll allow until we transition to reverse. Without it, you could
-        //accidently switch to reversing if you over rotate the joystick around while turning (bringing the vertical value to negatives).
-
-
-
-
-        /* This version has a small range in which it will allow reverse 
-         *
-         * if (m_InvertReverseTurning && m_SmoothTransitions)
-          {
-              //if (vertical <= 0 && vertical > -0.6) vertical *= -1;
-
-              if(vertical <= 0) //Is player reversing?
-              {
-                  //this is a RANGE:  -ingoreUntilVal  to  ignoreUntilVal
-                  float ignoreUntilVal = 0.8f;
-
-                  if((horizontal >= -(ignoreUntilVal) && horizontal <= ignoreUntilVal) == false)
-                  {
-                      //Not in the range...NO reversing. Flip movement to positive 
-                      vertical *= -1;
-                  }
-              }
-
-          }*/
-
-
-        /*
-         * This version locks moving directions until you lift up on the joystick.
-         * 
-        if (m_SmoothTransitions)
-        {
-            bool isMoving = ((vertical > 0.1 || vertical < -0.1) || (horizontal > 0.1 || horizontal < -0.1)) ? true : false;
-
-            if (isMoving)
+            if (m_DisableOnFlip)
             {
-                if (m_DirectionalLock == false)
-                {
-                    m_DirectionalLock = true;
-                    m_Direction = vertical;
-                }
-                else
-                {
-                    if (m_Direction > 0) vertical = (vertical > 0) ? vertical : vertical *= -1; 
-                    else vertical = (vertical < 0) ? vertical : vertical *= -1;
-                }
+                if (Vector3.Dot(transform.up, Vector3.up) < 0) return;
             }
-            else m_DirectionalLock = false;
-        }   */
+
+
+
+            //Getting our WASD using GetAxis. Doing it this way allows arrow keys, controllers, and joysticks.....vs  Input.GetButtonDown  being statically tied to W, A, S, and D only.
+            float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
+            float vertical = CrossPlatformInputManager.GetAxis("Vertical");
+
+
+
+            //"Smooth" transitions is simply a temporary fix to a problem that comes from inverting reverse turning while using joysticks. 
+            //We invert turning due to wanting the movements in reverse to behave like a vehicle. Without invert reverse turning a
+            //forward+left = left turn, but reverse+left equals a right turn (Think of a X/Y graph in math using an arrow (vector) and it makes sense why)
+
+            //this quick fix simply sets the "range" (see IgnoreUntilVal) of the joystick we'll allow until we transition to reverse. Without it, you could
+            //accidently switch to reversing if you over rotate the joystick around while turning (bringing the vertical value to negatives).
 
 
 
 
-        //pass movement values to animator
-        m_Animator.SetFloat("Turn", horizontal);
-        m_Animator.SetFloat("Move", vertical);
+            /* This version has a small range in which it will allow reverse 
+             *
+             * if (m_InvertReverseTurning && m_SmoothTransitions)
+              {
+                  //if (vertical <= 0 && vertical > -0.6) vertical *= -1;
+
+                  if(vertical <= 0) //Is player reversing?
+                  {
+                      //this is a RANGE:  -ingoreUntilVal  to  ignoreUntilVal
+                      float ignoreUntilVal = 0.8f;
+
+                      if((horizontal >= -(ignoreUntilVal) && horizontal <= ignoreUntilVal) == false)
+                      {
+                          //Not in the range...NO reversing. Flip movement to positive 
+                          vertical *= -1;
+                      }
+                  }
+
+              }*/
+
+
+            /*
+             * This version locks moving directions until you lift up on the joystick.
+             * 
+            if (m_SmoothTransitions)
+            {
+                bool isMoving = ((vertical > 0.1 || vertical < -0.1) || (horizontal > 0.1 || horizontal < -0.1)) ? true : false;
+
+                if (isMoving)
+                {
+                    if (m_DirectionalLock == false)
+                    {
+                        m_DirectionalLock = true;
+                        m_Direction = vertical;
+                    }
+                    else
+                    {
+                        if (m_Direction > 0) vertical = (vertical > 0) ? vertical : vertical *= -1; 
+                        else vertical = (vertical < 0) ? vertical : vertical *= -1;
+                    }
+                }
+                else m_DirectionalLock = false;
+            }   */
 
 
 
 
-        //Create a magnitude (difference between to points--think of a line in math). This will be where the object moves. 
-        //The math is our current forward vector * our W/S input (which RANGES from -1 to 1.....Its usually -1 for S, 0 for none, and 1 for W)  *  our speed to get an actual movement). 
-        //Time.deltaTime is the time from the last frame (this makes it framerate independent, so higher/lower framerates run the same).
-        Vector3 movement = m_Object.transform.forward * vertical * m_Speed * Time.deltaTime;
-        m_Object.MovePosition(m_Object.position + movement);
+            //pass movement values to animator
+            m_Animator.SetFloat("Turn", horizontal);
+            m_Animator.SetFloat("Move", vertical);
 
 
 
-        //Basically the same as above, except this rotation instead of position. 
-        float dir = horizontal * m_RotateSpeed * Time.deltaTime;
 
-        if (m_InvertReverseTurning)
-        {
-            if (vertical < 0) dir *= -1; //if movement is backwards...inverse turn
+            //Create a magnitude (difference between to points--think of a line in math). This will be where the object moves. 
+            //The math is our current forward vector * our W/S input (which RANGES from -1 to 1.....Its usually -1 for S, 0 for none, and 1 for W)  *  our speed to get an actual movement). 
+            //Time.deltaTime is the time from the last frame (this makes it framerate independent, so higher/lower framerates run the same).
+            Vector3 movement = m_Object.transform.forward * vertical * m_Speed * Time.deltaTime;
+            m_Object.MovePosition(m_Object.position + movement);
+
+
+
+            //Basically the same as above, except this rotation instead of position. 
+            float dir = horizontal * m_RotateSpeed * Time.deltaTime;
+
+            if (m_InvertReverseTurning)
+            {
+                if (vertical < 0) dir *= -1; //if movement is backwards...inverse turn
+            }
+
+            Quaternion deltaRotation = Quaternion.Euler(new Vector3(0f, dir, 0f));
+            m_Object.MoveRotation(m_Object.rotation * deltaRotation);
         }
-
-        Quaternion deltaRotation = Quaternion.Euler(new Vector3(0f, dir, 0f));
-        m_Object.MoveRotation(m_Object.rotation * deltaRotation);
-
 
     }
 

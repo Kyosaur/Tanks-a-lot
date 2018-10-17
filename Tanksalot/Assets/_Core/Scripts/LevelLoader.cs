@@ -25,27 +25,13 @@ public class LevelLoader : MonoBehaviour {
     {
         //SceneManager.LoadScene("Forest");
 
-        NetworkManager.singleton.networkAddress = "127.0.0.1";
-        NetworkManager.singleton.networkPort = 7777;
-
-        NetworkManager.singleton.StartClient();
            
         
     }
 
     public void SinglePlayer()
     {
-        if (!NetworkClient.active && !NetworkServer.active && NetworkManager.singleton.matchMaker == null)
-        {
-            //SceneManager.LoadScene("Forest");
-            //NetworkManager.singleton.ServerChangeScene("Forest");
 
-            NetworkManager.singleton.networkAddress = "127.0.0.1";
-            NetworkManager.singleton.networkPort = 7777;
-
-            NetworkManager.singleton.StartHost();
-   
-        }
     }
 
     public void MultiplayerJoin()
@@ -55,9 +41,7 @@ public class LevelLoader : MonoBehaviour {
 
     public void MultiplayerStart()
     {
-        if (NetworkManager.singleton.matchMaker == null) NetworkManager.singleton.StartMatchMaker();
 
-        NetworkManager.singleton.matchMaker.CreateMatch("Test match", 10, true, "", "", "", 0, 0, NetworkManager.singleton.OnMatchCreate);
     }
 
     public void LoadLevel(string level)

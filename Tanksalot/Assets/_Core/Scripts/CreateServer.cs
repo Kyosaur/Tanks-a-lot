@@ -1,11 +1,13 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using Photon.Realtime;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Networking.Match;
 
 
-public class CreateServer : MonoBehaviour
+public class CreateServer : MonoBehaviourPunCallbacks, IMatchmakingCallbacks
 {
     [SerializeField] private Transform m_ServerRuleListParent;
     [SerializeField] private GameObject m_ServerCreateRulesPrefab;
@@ -69,10 +71,9 @@ public class CreateServer : MonoBehaviour
     public void CreateNewServer()
     {
         Debug.Log("create new server");
-        if (NetworkManager.singleton.matchMaker == null) NetworkManager.singleton.StartMatchMaker();
-        NetworkManager.singleton.matchMaker.CreateMatch(m_ServerName, 10, true, m_ServerPassword, "", "", 0, 0, this.OnMatchCreate);
-    }
+        if(!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
 
+    }
 
     public void OnServerNameChange(string name)
     {
@@ -84,22 +85,49 @@ public class CreateServer : MonoBehaviour
         m_ServerPassword = password;
     }
 
-    public void OnMatchCreate(bool success, string extendedInfo, MatchInfo matchInfo)
+
+    public override void OnConnectedToMaster()
     {
-        if (success)
+        base.OnConnectedToMaster();
+
+        Debug.Log("OnConnectedToMaster() was called by PUN....creating room");
+
+        RoomOptions roomOptions = new RoomOptions();
+        roomOptions.IsVisible = true;
+        roomOptions.MaxPlayers = 4;
+
+        //Properties visible INSIDE the game.
+        roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable
         {
-            Debug.Log("success");
+            { GAMEMODE_RULE_TEXT, GetSelectedServerRuleOption(GAMEMODE_RULE_TEXT) },
+            { MAP_RULE_TEXT, GetSelectedServerRuleOption(MAP_RULE_TEXT) }
+        };
 
-            Server s = new Server();
-            s.Setup(matchInfo.networkId, m_ServerName, m_ServerPassword);
+        //Properties visible OUTSIDE the game
+        roomOptions.CustomRoomPropertiesForLobby = new string[]
+        {
+            GAMEMODE_RULE_TEXT ,
+            MAP_RULE_TEXT 
+        };
 
-            s.SetMapName(GetSelectedServerRuleOption(MAP_RULE_TEXT));
-            s.SetMaxPlayerCount(int.Parse(GetSelectedServerRuleOption(MAXPLAYERS_RULE_TEXT)));
+        PhotonNetwork.CreateRoom(m_ServerName, roomOptions, TypedLobby.Default);
+       
 
-          //  GameManager.Instance.RegisterServer((ulong) matchInfo.networkId, s.SaveToString());
+    }
 
-        }
-        else Debug.Log("nope");
-        NetworkManager.singleton.OnMatchCreate(success, extendedInfo, matchInfo);
+    public override void OnCreatedRoom()
+    {
+        base.OnCreatedRoom();
+
+        Debug.Log("Room created!");
+        PhotonNetwork.LoadLevel("Forest");
+    }
+
+
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        base.OnCreateRoomFailed(returnCode, message);
+
+        Debug.Log("FAILED TO CREATE ROOM! Error Code: " + returnCode + " | Message: " + message);
     }
 }

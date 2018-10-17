@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -47,17 +48,6 @@ public class Tank : Damagable
 
 
 
-    public override void OnStartAuthority()
-    {
-        if (hasAuthority)
-        {
-            m_Camera.gameObject.tag = "MainCamera";
-            m_Camera.gameObject.SetActive(true);
-        }
-
-    }
-
-
     private void Awake()
     {
 
@@ -73,6 +63,22 @@ public class Tank : Damagable
     {
         base.Start();
 
+        Debug.Log("tank start");
+        if(photonView.IsMine)
+        {
+            Debug.Log("Tank is mine");
+            GameObject c = GameObject.FindGameObjectWithTag("MainCamera");
+            if (c != null)
+            {
+                Debug.Log("Camera isnt null...disable");
+                c.SetActive(false);
+            }
+
+            if (m_Camera == null) Debug.Log("NO CAMERA NOOB");
+
+            m_Camera.gameObject.tag = "MainCamera";
+            m_Camera.gameObject.SetActive(true);
+        }
 
         if (m_Renderer.Length > 0)
         {
@@ -81,12 +87,12 @@ public class Tank : Damagable
                 r.material.color = m_Color;
             }
         }
-
+        Debug.Log("end of start");
     }
 
     void Update()
     {
-        if(hasAuthority == true) 
+        if(photonView.IsMine)
         {
             if (!m_TurretDelay)
             {
@@ -95,7 +101,7 @@ public class Tank : Damagable
 
                 if (Physics.Raycast(ray, out hit))
                 {
-                    CmdAim(hit.point);
+                    this.photonView.RPC("RpcAim", RpcTarget.All, hit.point);
 
                     m_TurretDelay = true;
                     Invoke("TurretDelayReset", m_AimDelayTime / 1000); //Divide by 1000 to get MS time
@@ -106,7 +112,7 @@ public class Tank : Damagable
             {
                 if (CrossPlatformInputManager.GetButtonDown("Fire1"))
                 {
-                    CmdFire();
+                    this.photonView.RPC("RpcFire", RpcTarget.All);
 
                     m_FireDelay = true;
                     Invoke("ShootDelayReset", m_FireDelayTime / 1000);
@@ -116,7 +122,7 @@ public class Tank : Damagable
 
     }
 
-    [ClientRpc]
+    [PunRPC]
     public void RpcFire()
     {
         var rot = m_TurretBone.rotation * Quaternion.Euler(180, 0, 0);
@@ -125,14 +131,8 @@ public class Tank : Damagable
         shellInstance.velocity = m_ProjectileSpeed * -m_TurretBone.transform.up;
     }
 
-    [Command]
-    public void CmdFire()
-    {
-        RpcFire();
-    }
 
-
-    [ClientRpc]
+    [PunRPC]
     private void RpcAim(Vector3 pos)
     {
         Vector3 targetDir = pos - m_TurretBone.transform.position;
@@ -144,16 +144,10 @@ public class Tank : Damagable
     }
 
 
-    [Command]
-    public void CmdAim(Vector3 pos)
-    {
-        RpcAim(pos);
-    }
-
-
     new void OnCollisionEnter(Collision collision)
     {
         base.OnCollisionEnter(collision);
+        Debug.Log("Colliding with " + collision.gameObject.name);
     }
 
 

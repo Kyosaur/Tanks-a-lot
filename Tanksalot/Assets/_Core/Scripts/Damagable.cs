@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -16,15 +17,15 @@ public enum HealthDisplayOptions
 }
 
 
-public class Damagable : NetworkBehaviour
+public class Damagable : MonoBehaviourPun
 {
 
     [Header("--Health Stats--")]
 
-    [SyncVar]
+
     public float m_Armour = 0.0f;
 
-    [SyncVar]
+ 
     public float m_Health = 100f;
 
     [Space(10)]
@@ -200,6 +201,5 @@ public class Damagable : NetworkBehaviour
         }
         return col;
     }
-
 
 }

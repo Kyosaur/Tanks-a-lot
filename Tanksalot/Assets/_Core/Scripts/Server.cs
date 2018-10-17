@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Photon.Realtime;
 using UnityEngine;
-using UnityEngine.Networking.Match;
-using UnityEngine.Networking.Types;
+
 
 public class Server {
 
-    [SerializeField] private ulong m_ServerID;
+    [SerializeField] private RoomInfo m_ServerReference;
 
     [SerializeField] private string m_Name;
     [SerializeField] private string m_Password;
@@ -18,27 +16,25 @@ public class Server {
 
 
 
-    public void Setup (NetworkID id, string name, string password)
+    public void Setup (RoomInfo roomInfo, string password = "")
     {
-        m_ServerID = (ulong) id;
+        m_ServerReference = roomInfo;
 
-        m_Name = name;
+        m_Name = roomInfo.Name;
         m_Password = password;
+
+        m_MaxPlayers = roomInfo.MaxPlayers;
+        m_CurrentPlayers = roomInfo.PlayerCount;
+
+        m_Map = (string) roomInfo.CustomProperties["Map"];
+        Debug.Log(m_Map);
+        
     }
 
-    public string SaveToString()
+    
+    public string GetGameModeName()
     {
-        return JsonUtility.ToJson(this);
-    }
-
-    public ulong GetServerID()
-    {
-        return m_ServerID;
-    }
-
-    public void SetMapName(string map)
-    {
-        m_Map = map;
+        return (string) m_ServerReference.CustomProperties["Game Mode"];
     }
 
     public string GetMapName()
@@ -51,24 +47,16 @@ public class Server {
         return m_Name;
     }
 
-    public void SetMaxPlayerCount(int maxPlayers)
-    {
-        m_MaxPlayers = maxPlayers;
-    }
 
     public int GetMaxPlayerCount()
     {
-        return m_MaxPlayers;
+        return m_ServerReference.MaxPlayers;
     }
 
-    public void SetPlayerCount(int players)
-    {
-        m_CurrentPlayers = players;
-    }
 
     public int GetPlayerCount()
     {
-        return m_CurrentPlayers;
+        return m_ServerReference.PlayerCount;
     }
 
 }

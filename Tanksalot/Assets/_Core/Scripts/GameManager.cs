@@ -1,98 +1,31 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
-using UnityEngine.Networking.Types;
 
-
-
-public class GameManager : NetworkBehaviour
+public class GameManager : MonoBehaviourPunCallbacks
 {
+    [SerializeField] private GameObject m_PlayerObjectPrefab;
+    [SerializeField] private string m_SpawnPointTag;
 
-#region Singleton
-    private static GameManager m_instance;
 
+    private GameObject[] m_SpawnPoints;
 
-    public static GameManager Instance
+	// Use this for initialization
+	void Awake ()
     {
-        get { return m_instance;  }
-    }
-
-    private void Awake()
-    {
-        if(m_instance != null && m_instance != this)
-        {
-            Destroy(this.gameObject);
-            return;
-        }
-
-        Debug.Log("GameManager created instance");
-        m_instance = this;
-        DontDestroyOnLoad(this.gameObject);
-
-    }
-    #endregion
-
-
-
-    Dictionary<ulong, Server> m_ServerDictionary = new Dictionary<ulong, Server>();
-
+        m_SpawnPoints = GameObject.FindGameObjectsWithTag("SpawnPoint");
+	}
 
     public void Start()
     {
-        
-    }
-
-
-    public void RegisterServer(ulong id, string serverJson)
-    {
-        if (!isServer) CmdRegisterServer(id, serverJson);
-    }
-
-
-    [Command]
-    public void CmdRegisterServer(ulong id, string serverJson)
-    {
-        Debug.Log("Registering server (dic size: " + m_ServerDictionary.Count + ")...");
-        m_ServerDictionary.Add(id, JsonUtility.FromJson<Server>(serverJson));
-        Debug.Log("Added server " + id + "(dic size: " + m_ServerDictionary.Count + ")...");
-
-    }
-
-    [Command]
-    public void CmdUnregisterServer(ulong id)
-    {
-        m_ServerDictionary.Remove(id);
-    }
-
-
-    public void GetServer(ulong id)
-    {
-        if (!isServer) CmdGetServer(id);
-    }
-
-    [Command]
-    public void CmdGetServer(ulong id)
-    {
-        if (m_ServerDictionary == null) Debug.Log("dic is null????");
-
-        if (m_ServerDictionary.ContainsKey(id))
+        if (m_SpawnPoints != null && m_SpawnPoints.Length > 0)
         {
-            //return m_ServerDictionary[id].SaveToString();
-            Debug.Log(m_ServerDictionary[id].SaveToString());
-        }
-        else
-        {
-            Debug.Log("KEY: " + id + " not found. Dumping dictionary (" + m_ServerDictionary.Keys.Count +" KEYS)");
-            foreach(NetworkID i in m_ServerDictionary.Keys)
-            {
-                Debug.Log("ID: " + i);
-            }
-            //return "";
+            Debug.Log("Trying to instantiate...");
+            PhotonNetwork.Instantiate(m_PlayerObjectPrefab.name, m_SpawnPoints[0].transform.position, m_SpawnPoints[0].transform.rotation);
+ 
 
         }
+        else Debug.Log("EMPTY SPAWN ARRAY, DUMMY!!!");
     }
-
-
-
 }

@@ -1,9 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Photon.Realtime;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.Networking.Match;
 using UnityEngine.UI;
 
 
@@ -20,25 +16,22 @@ public class ServerListItem : MonoBehaviour
     private Server m_Server;
 
 
-    public void Setup(MatchInfoSnapshot match, GameObject listObject, SelectServerDelegate onSelectCallback)
+    public void Setup(RoomInfo room, GameObject listObject, SelectServerDelegate onSelectCallback)
     {
         m_OnSelectCallback = onSelectCallback;
         m_ListObject = listObject;
 
-        Debug.Log("SLI setup:: match net id = " + match.networkId);
-        m_Server = null;// JsonUtility.FromJson < Server > (GameManager.Instance.CmdGetServer(match.networkId));
-    
+        m_Server = new Server();
+       m_Server.Setup(room);
+      
 
-        Debug.Log("SLI m_server = " + match.networkId);
-
-        m_ServerListItemText.text = match.name + " (" + match.currentSize + "/" + match.maxSize + ")";
+        m_ServerListItemText.text = room.Name + " (" + room.PlayerCount + "/" + room.MaxPlayers + ")";
     }
 
     public void OnClicked()
     {
         m_OnSelectCallback.Invoke(this);
     }
-
 
 
     public GameObject GetListObject()

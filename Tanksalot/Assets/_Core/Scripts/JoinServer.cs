@@ -1,15 +1,12 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using Photon.Realtime;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
-using UnityEngine.Networking.Match;
-using UnityEngine.Networking.Types;
 using UnityEngine.UI;
 
-public class JoinServer : NetworkBehaviour
+public class JoinServer : MonoBehaviourPunCallbacks
 {
-
-    NetworkManager m_NetworkManager;
 
     List<ServerListItem> m_ServerList = new List<ServerListItem>();
     List<ServerDetailsItem> m_ServerDetails = new List<ServerDetailsItem>();
@@ -25,16 +22,22 @@ public class JoinServer : NetworkBehaviour
     [SerializeField] private Transform m_ServerDetailsParent;
     [SerializeField] private GameObject m_ServerDetailsItemPrefab;
 
+    private Dictionary<string, RoomInfo> m_CachedRoomList;
+
+    private void Awake()
+    {
+        m_CachedRoomList = new Dictionary<string, RoomInfo>();
+    }
+
     // Use this for initialization
     void Start()
     {
-        m_NetworkManager = NetworkManager.singleton;
-        if (m_NetworkManager.matchMaker == null)
+        if (!PhotonNetwork.IsConnected)
         {
-            m_NetworkManager.StartMatchMaker();
+            PhotonNetwork.ConnectUsingSettings();
         }
-
-        RefreshServerList();
+            
+        //RefreshServerList();
     }
 
 
@@ -60,23 +63,18 @@ public class JoinServer : NetworkBehaviour
     {
         ClearServerList();
         ClearServerDetailsList();
-        m_NetworkManager.matchMaker.ListMatches(0, 20, "", true, 0, 0, OnMatchList);
-    }
 
-
-    public void OnMatchList(bool success, string extendedInfo, List<MatchInfoSnapshot> matches)
-    {
         bool executedOnce = false;
 
-        if(matches != null)
+        if ( m_CachedRoomList != null)
         {
-            foreach(MatchInfoSnapshot server in matches)
+            foreach (RoomInfo server in m_CachedRoomList.Values)
             {
                 GameObject serverListItem = Instantiate(m_ServerListItemPrefab);
                 serverListItem.transform.SetParent(m_ServerListParent, false);
 
                 ServerListItem sli = serverListItem.GetComponent<ServerListItem>();
-                if(sli != null)
+                if (sli != null)
                 {
                     sli.Setup(server, serverListItem, OnServerSelected);
 
@@ -92,16 +90,78 @@ public class JoinServer : NetworkBehaviour
         }
     }
 
+    public override void OnConnectedToMaster()
+    {
+        base.OnConnectedToMaster();
+        if (!PhotonNetwork.InLobby) PhotonNetwork.JoinLobby();
+        
+    }
+
+    public override void OnJoinedLobby()
+    {
+        base.OnJoinedLobby();
+        Invoke("RefreshServerList", 0.3f);
+    }
+
+    public override void OnJoinedRoom()
+    {
+        base.OnJoinedRoom();
+        Debug.Log("Room JOINED!");
+
+        PhotonNetwork.LoadLevel("Forest");
+    }
+
+    public override void OnJoinRoomFailed(short returnCode, string message)
+    {
+        base.OnJoinRoomFailed(returnCode, message);
+        Debug.Log("Room NOT joined. Error #: " + returnCode + "  Message: " + message);
+    }
+
+
+    public override void OnRoomListUpdate(List<RoomInfo> roomList)
+    {
+        base.OnRoomListUpdate(roomList);
+        UpdateCachedRoomList(roomList);
+
+    }
+
+    private void UpdateCachedRoomList(List<RoomInfo> roomList)
+    {
+        foreach (RoomInfo info in roomList)
+        {
+            // Remove room from cached room list if it got closed, became invisible or was marked as removed
+            if (!info.IsOpen || !info.IsVisible || info.RemovedFromList)
+            {
+                if (m_CachedRoomList.ContainsKey(info.Name))
+                {
+                    m_CachedRoomList.Remove(info.Name);
+                }
+
+                continue;
+            }
+
+            // Update cached room info
+            if (m_CachedRoomList.ContainsKey(info.Name))
+            {
+                m_CachedRoomList[info.Name] = info;
+            }
+            // Add new room info to cache
+            else
+            {
+                m_CachedRoomList.Add(info.Name, info);
+            }
+        }
+    }
+
+
     public void OnClickJoin()
     {
         if (m_CurrentlySelected != null)
         {
             Debug.Log("CurrentlySelected not null");
-            if (m_NetworkManager == null) Debug.Log("network null stupid");
             if (m_CurrentlySelected.GetServer() == null) Debug.Log("GetServer NULL");
-       
 
-            m_NetworkManager.matchMaker.JoinMatch((NetworkID) m_CurrentlySelected.GetServer().GetServerID(), "", "", "", 0, 0, m_NetworkManager.OnMatchJoined);
+            PhotonNetwork.JoinRoom(m_CurrentlySelected.GetServer().GetServerName());
         }
     }
 
@@ -109,6 +169,7 @@ public class JoinServer : NetworkBehaviour
     {
         AddServerDetail("Name:", s.GetServerName());
         AddServerDetail("", "");
+        AddServerDetail("Game Mode:", s.GetGameModeName());
         AddServerDetail("Map:", s.GetMapName());
         AddServerDetail("Player Count:", s.GetPlayerCount().ToString());
         AddServerDetail("Max Players:", s.GetMaxPlayerCount().ToString());
@@ -136,7 +197,6 @@ public class JoinServer : NetworkBehaviour
 
     public void OnServerSelected(ServerListItem selected)
     {
-        Debug.Log("OnServerSelected");
 
         if(m_CurrentlySelected != null)
         {
