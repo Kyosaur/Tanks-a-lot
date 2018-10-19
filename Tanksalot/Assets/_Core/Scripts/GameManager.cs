@@ -31,8 +31,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    string name = obj.name.Split(' ')[0];
-                    PhotonNetwork.InstantiateSceneObject(name, obj.transform.position, obj.transform.rotation);
+                    string name = obj.name.Split(' ')[0]; //Grab the object name, and make sure it doesnt have a number attached to it (Ex: "Health (1)").
+                    PhotonNetwork.InstantiateSceneObject(name, obj.transform.position, obj.transform.rotation); //Instantiate said object (prefab has a photonView).
                 }
                 obj.gameObject.SetActive(false);
 

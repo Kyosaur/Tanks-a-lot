@@ -142,7 +142,6 @@ public class Tank : Damagable
     new void OnCollisionEnter(Collision collision)
     {
         base.OnCollisionEnter(collision);
-        Debug.Log("Colliding with " + collision.gameObject.name);
     }
 
 

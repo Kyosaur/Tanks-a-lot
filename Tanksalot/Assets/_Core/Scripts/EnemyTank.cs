@@ -86,6 +86,7 @@ public class EnemyTank : Damagable
     // Update is called once per frame
     void FixedUpdate()
     {
+        Debug.Log("Navmesh info -- Has Path: " + m_NavAgent.hasPath + " PathPending: " + m_NavAgent.pathPending + " Going to: " + m_NavAgent.destination + " Velocity: " + m_NavAgent.velocity + " On Mesh: " + m_NavAgent.isOnNavMesh + " Is stopped: " + m_NavAgent.isStopped);
 
         if (m_EnemyType == ENEMY_AI_TYPE.AGGRO)
         {
@@ -216,9 +217,14 @@ public class EnemyTank : Damagable
         NavMeshHit pos;
         if (NavMesh.SamplePosition(location, out pos, 3.0f, NavMesh.AllAreas))
         {
+            m_NavAgent.autoRepath = true;
+
             m_NavAgent.speed = m_Speed;
             m_NavAgent.angularSpeed = m_RotateSpeed;
             m_NavAgent.stoppingDistance = stopDistance;
+
+            
+            Debug.DrawRay(pos.position, transform.TransformDirection(Vector3.up) * 100, Color.yellow, 15F);
 
             m_NavAgent.SetDestination(pos.position);
 
@@ -234,6 +240,7 @@ public class EnemyTank : Damagable
         {
             if (!m_NavAgent.hasPath || m_NavAgent.velocity.sqrMagnitude == 0f)
             {
+                Debug.Log("destination reached");
                 return true;
             }
         }
