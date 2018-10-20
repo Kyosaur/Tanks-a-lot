@@ -89,6 +89,7 @@ public class Tank : Damagable
     {
         if(photonView.IsMine)
         {
+
             if (!m_TurretDelay)
             {
                 RaycastHit hit;

@@ -41,7 +41,7 @@ public class Damagable : MonoBehaviourPun, IPunObservable
 
     private float m_HideHealthTime = 1.7f;  //Time until we hide our healthbars (if HealthDisplayOptions == ShowWhenDamaged) in seconds
 
-    public const string UPDATE_HEALTHBARS_METHOD = "UpdateHealthBars";
+    public const string UPDATE_HEALTHBARS_METHOD = "UpdateHealthbars";
     public const string HIDE_HEALTHBARS_METHOD = "HideHealthbarsHook";
 
     protected virtual void Start()
@@ -128,7 +128,7 @@ public class Damagable : MonoBehaviourPun, IPunObservable
         }
     }
 
-    [PunRPC]
+
     public void UpdateHealthbars()
     {
         if (m_ArmourbarInstance != null) m_ArmourbarInstance.GetComponentInChildren<Slider>().value = m_Armour / m_InitialArmour;
@@ -150,7 +150,6 @@ public class Damagable : MonoBehaviourPun, IPunObservable
 
     void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        Debug.Log("PhotonSerializeView");
         if (stream.IsWriting)
         {
             // We own this player: send the others our data
@@ -159,13 +158,13 @@ public class Damagable : MonoBehaviourPun, IPunObservable
         }
         else
         {
-            m_IsInitialized = true;
-
             // Network player, receive data
             m_Armour = (float)stream.ReceiveNext();
             m_Health = (float)stream.ReceiveNext();
 
             UpdateHealthbars();
+
+            m_IsInitialized = true;
         }
     }
 

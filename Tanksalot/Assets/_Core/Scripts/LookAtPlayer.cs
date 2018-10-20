@@ -11,22 +11,23 @@ public class LookAtPlayer : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
     {
-       // InvokeRepeating("CameraUpdate", 0.2f, 5);
+        InvokeRepeating("CameraUpdate", 0f, 0.4f);
 	}
 
     void CameraUpdate()
     {
         if (m_Camera == null || !m_Camera.isActiveAndEnabled)
         {
-            //m_Camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<Camera>(true);
+            m_Camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<Camera>(true);
         }
+
     }
 
     // Update is called once per frame
     void Update ()
     {
 
-        //if(m_Camera != null && m_Camera.isActiveAndEnabled) transform.LookAt(transform.position + m_Camera.transform.rotation * Vector3.forward, m_Camera.transform.rotation * Vector3.up);
+        if(m_Camera != null && m_Camera.isActiveAndEnabled) transform.LookAt(transform.position + m_Camera.transform.rotation * Vector3.forward, m_Camera.transform.rotation * Vector3.up);
 
     }
 }
