@@ -19,12 +19,12 @@ public class ArmourPickup : MonoBehaviourPun {
 
         if (obj != null)
         {
-            if (obj.m_Armour < obj.GetInitialArmour())
+            if (obj.GetArmour() < obj.GetInitialArmour())
             {
-                obj.m_Armour += m_ArmourAmount;
-                obj.ForceHealthUpdate();
+                obj.SetArmour(obj.GetArmour() + m_ArmourAmount);
 
-                this.photonView.RPC("ArmourPickupDestroy", RpcTarget.MasterClient);
+
+                this.photonView.RPC("ArmourPickupDestroy", RpcTarget.AllBuffered);
 
             }
         }
@@ -34,7 +34,7 @@ public class ArmourPickup : MonoBehaviourPun {
     [PunRPC]
     public void ArmourPickupDestroy()
     {
-        PhotonNetwork.Destroy(this.gameObject);
+        this.gameObject.SetActive(false);
     }
 
 }

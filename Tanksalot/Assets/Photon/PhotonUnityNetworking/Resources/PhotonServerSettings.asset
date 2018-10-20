@@ -35,4 +35,8 @@ MonoBehaviour:
   - HealthPickupDestroy
   - RepairPickupDestroy
   - DestroyOriginalSceneObject
+  - HideHealthbars
+  - UpdateHealthbars
+  - SetArmour
+  - SetHealth
   DisableAutoOpenWizard: 1

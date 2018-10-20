@@ -21,12 +21,12 @@ public class HealthPickup : MonoBehaviourPun {
 
         if (obj != null)
         {
-            if(obj.m_Health < obj.GetInitialHealth())
+            if(obj.GetHealth() < obj.GetInitialHealth())
             {
-                obj.m_Health += m_HealAmount;
-                obj.ForceHealthUpdate();
+                obj.SetHealth(obj.GetHealth() + m_HealAmount);
 
-                this.photonView.RPC("HealthPickupDestroy", RpcTarget.MasterClient);
+
+                this.photonView.RPC("HealthPickupDestroy", RpcTarget.AllBuffered);
             }
         }
         
@@ -35,7 +35,7 @@ public class HealthPickup : MonoBehaviourPun {
     [PunRPC]
     public void HealthPickupDestroy()
     {
-        PhotonNetwork.Destroy(this.gameObject);
+        this.gameObject.SetActive(false);
     }
 
 

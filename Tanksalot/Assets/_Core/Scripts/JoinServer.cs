@@ -167,7 +167,7 @@ public class JoinServer : MonoBehaviourPunCallbacks
 
     public void AddAllServerDetails(Server s)
     {
-        AddServerDetail("Name:", s.GetServerName().Trim().Substring(0, 25));
+        AddServerDetail("Name:", s.GetServerName()); //.Trim().Substring(0, 25));
 
         AddServerDetail("", "");
         AddServerDetail("Mode:", s.GetGameModeName());

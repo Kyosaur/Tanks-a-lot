@@ -17,36 +17,43 @@ public enum HealthDisplayOptions
 }
 
 
-public class Damagable : MonoBehaviourPun
+public class Damagable : MonoBehaviourPun, IPunObservable
 {
 
     [Header("--Health Stats--")]
+    private bool m_IsInitialized = false;
 
-
-    public float m_Armour = 0.0f;
-
- 
-    public float m_Health = 100f;
+    [SerializeField] private float m_InitialArmour = 0f;
+    [SerializeField] private float m_InitialHealth = 100f;
 
     [Space(10)]
-    public HealthDisplayOptions m_HealthbarDisplay;
+    [SerializeField] private float m_Armour;
+    [SerializeField] private float m_Health;
 
-    public Canvas m_ArmourbarSlider;
-    public Canvas m_HealthbarSlider;  //This is a canvas, but is named "Slider" for the editor's inspector (makes it a bit easier to understand).
+    [Space(10)]
+    [SerializeField] private HealthDisplayOptions m_HealthbarDisplay;
+
+    [SerializeField] private Canvas m_ArmourbarSlider;
+    [SerializeField] private Canvas m_HealthbarSlider;  //This is a canvas, but is named "Slider" for the editor's inspector (makes it a bit easier to understand).
 
     private Canvas m_ArmourbarInstance;
     private Canvas m_HealthbarInstance;
 
-    private float m_InitialArmour;
-    private float m_InitialHealth;
-
     private float m_HideHealthTime = 1.7f;  //Time until we hide our healthbars (if HealthDisplayOptions == ShowWhenDamaged) in seconds
-    
+
+    public const string UPDATE_HEALTHBARS_METHOD = "UpdateHealthBars";
+    public const string HIDE_HEALTHBARS_METHOD = "HideHealthbarsHook";
+
     protected virtual void Start()
     {
-        m_InitialArmour = m_Armour;
-        m_InitialHealth = m_Health;
 
+        InvokeRepeating(UPDATE_HEALTHBARS_METHOD, 0f, 0.3f);
+
+        if (photonView.IsMine)
+        {
+            m_Health = m_InitialHealth;
+            m_Armour = m_InitialArmour;
+        }
 
         if (m_HealthbarSlider != null) //make sure that m_HealthbarSlider is specified in the Editor's Inspector
         {
@@ -60,13 +67,13 @@ public class Damagable : MonoBehaviourPun
             //Set the healthbar's  Y  position above object (based on the collider attached).
             // float offset = this.gameObject.GetComponentInChildren<Collider>().bounds.size.y + 1;
             Collider c = GetHighestCollider();
-           float offset = (c != null) ? c.bounds.size.y + 1 : this.gameObject.GetComponentInChildren<Collider>().bounds.size.y + 1;
+            float offset = (c != null) ? c.bounds.size.y + 1 : this.gameObject.GetComponentInChildren<Collider>().bounds.size.y + 1;
 
             m_HealthbarInstance.transform.position += new Vector3(0, offset, 0);
 
             //If the healthbar isnt always displayed, we want to hide it.
-            if(m_HealthbarDisplay != HealthDisplayOptions.AlwaysOn) m_HealthbarInstance.gameObject.SetActive(false);
-            
+            if (m_HealthbarDisplay != HealthDisplayOptions.AlwaysOn) m_HealthbarInstance.gameObject.SetActive(false);
+
         }
 
         //same as above
@@ -75,11 +82,11 @@ public class Damagable : MonoBehaviourPun
             m_ArmourbarInstance = Instantiate(m_ArmourbarSlider);
             m_ArmourbarInstance.transform.SetParent(m_HealthbarInstance.transform, false);
 
-           
+
             m_ArmourbarInstance.GetComponentInChildren<Slider>().value = m_Armour / m_InitialArmour;
 
             float offset = 0;
-            if(m_HealthbarInstance != null)
+            if (m_HealthbarInstance != null)
             {
                 offset = m_HealthbarInstance.GetComponentInChildren<RectTransform>().rect.height;
             }
@@ -91,74 +98,84 @@ public class Damagable : MonoBehaviourPun
 
     }
 
-    public void ForceHealthUpdate() //ADDED for health/armour pickups...so we can show increased health when ShowWhenDamaged is enabled
-    {
-        if(m_HealthbarDisplay == HealthDisplayOptions.ShowWhenDamaged)
-        {
-            if (m_HealthbarInstance != null) m_HealthbarInstance.gameObject.SetActive(true);
-            if (m_ArmourbarInstance != null && m_Armour > 0) m_ArmourbarInstance.gameObject.SetActive(true);
-
-            CancelInvoke("HideHealthbars");
-            Invoke("HideHealthbars", m_HideHealthTime);
-        }
-
-
-        if (m_ArmourbarInstance != null) m_ArmourbarInstance.GetComponentInChildren<Slider>().value = m_Armour / m_InitialArmour;
-        if (m_HealthbarInstance != null) m_HealthbarInstance.GetComponentInChildren<Slider>().value = m_Health / m_InitialHealth;
-    }
-
     public virtual void OnCollisionEnter(Collision col)
     {
         DamageSource source = col.gameObject.GetComponent<DamageSource>();
 
-        if ( source != null)
+        if (source != null)
         {
 
             if (m_Armour <= 0) //do they have NO armour?
             {
-                m_Health = Mathf.Clamp(m_Health - source.m_Damage, 0, m_Health); // To avoid negatives...lock new health value to 0 minumum and the current m_Health value for max. 
+                SetHealth(Mathf.Clamp(m_Health - source.m_Damage, 0, m_Health)); // To avoid negatives...lock new health value to 0 minumum and the current m_Health value for max. 
             }
             else if (m_Armour >= source.m_Damage) //If they have Armour, check if the damage doesn't exceed the armour
             {
-                m_Armour = Mathf.Clamp(m_Armour - source.m_Damage, 0, m_Armour); //Dummy proof this, so negative values of DamageSource do not increase armour (negative minus a negative is a positive).
+                SetArmour(Mathf.Clamp(m_Armour - source.m_Damage, 0, m_Armour)); //Dummy proof this, so negative values of DamageSource do not increase armour (negative minus a negative is a positive).
             }
             else //if the damage exceeds armour value, continue damage into health.
             {
                 float difference = source.m_Damage - m_Armour;
 
-                m_Armour = 0;
-                m_Health = Mathf.Clamp(m_Health - difference, 0, m_Health); //Same as above...lock to 0 minimum and the current health value maximum.
+                SetArmour(0.0f);
+                SetHealth(Mathf.Clamp(m_Health - difference, 0, m_Health)); //Same as above...lock to 0 minimum and the current health value maximum.
             }
 
-
-            //Update healthbar percentage 
-            if(m_ArmourbarInstance != null) m_ArmourbarInstance.GetComponentInChildren<Slider>().value = m_Armour / m_InitialArmour;
-            if(m_HealthbarInstance != null) m_HealthbarInstance.GetComponentInChildren<Slider>().value = m_Health / m_InitialHealth;
-
-
-            //check to see if armour is 0...if so, hide armour bar
-            if (m_Armour <= 0) 
-            {
-                if (m_ArmourbarInstance != null) m_ArmourbarInstance.gameObject.SetActive(false);
-            }
 
             //destroy object if it has no health
-            if (m_Health <= 0) DestroyObject();
+            if (m_Health <= 0 && m_IsInitialized) DestroyObject();
 
-            //If the healthbar display setting is "Show when damaged", show the healthbar, and then set a "timer" to hide the healthbar again.
-            if(m_HealthbarDisplay == HealthDisplayOptions.ShowWhenDamaged)
-            {
-                if (m_HealthbarInstance != null) m_HealthbarInstance.gameObject.SetActive(true);
-                if(m_ArmourbarInstance != null && m_Armour > 0) m_ArmourbarInstance.gameObject.SetActive(true);
+        }
+    }
 
-                CancelInvoke("HideHealthbars"); 
-                Invoke("HideHealthbars", m_HideHealthTime);
-            }
-         
+    [PunRPC]
+    public void UpdateHealthbars()
+    {
+        if (m_ArmourbarInstance != null) m_ArmourbarInstance.GetComponentInChildren<Slider>().value = m_Armour / m_InitialArmour;
+        if (m_HealthbarInstance != null) m_HealthbarInstance.GetComponentInChildren<Slider>().value = m_Health / m_InitialHealth;
+
+        if (m_HealthbarDisplay != HealthDisplayOptions.NeverShow)
+        {
+            if (m_ArmourbarInstance != null) m_ArmourbarInstance.gameObject.SetActive((m_Armour > 0));
+            if (m_HealthbarInstance != null) m_HealthbarInstance.gameObject.SetActive(true);
+        }
+
+        if (m_HealthbarDisplay == HealthDisplayOptions.ShowWhenDamaged)
+        {
+            CancelInvoke(HIDE_HEALTHBARS_METHOD);
+            Invoke(HIDE_HEALTHBARS_METHOD, m_HideHealthTime);
         }
     }
 
 
+    void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        Debug.Log("PhotonSerializeView");
+        if (stream.IsWriting)
+        {
+            // We own this player: send the others our data
+            stream.SendNext(m_Armour);
+            stream.SendNext(m_Health);
+        }
+        else
+        {
+            m_IsInitialized = true;
+
+            // Network player, receive data
+            m_Armour = (float)stream.ReceiveNext();
+            m_Health = (float)stream.ReceiveNext();
+
+            UpdateHealthbars();
+        }
+    }
+
+
+    public void HideHealthbarsHook()
+    {
+        this.photonView.RPC(HIDE_HEALTHBARS_METHOD, RpcTarget.All);
+    }
+
+    [PunRPC]
     public void HideHealthbars()
     {
         if (m_HealthbarInstance != null) m_HealthbarInstance.gameObject.SetActive(false);
@@ -166,10 +183,25 @@ public class Damagable : MonoBehaviourPun
 
     }
 
-    public virtual void DestroyObject()
+
+    public float GetArmour()
     {
-        HideHealthbars();
-        Destroy(this.gameObject, 0.05f);
+        return m_Armour;
+    }
+
+    public float GetHealth()
+    {
+        return m_Health;
+    }
+
+    public void SetHealth(float amount)
+    {
+        m_Health = amount;
+    }
+    
+    public void SetArmour(float amount)
+    {
+        m_Armour = amount;
     }
 
     public float GetInitialHealth()
@@ -181,6 +213,14 @@ public class Damagable : MonoBehaviourPun
     {
         return m_InitialArmour;
     }
+
+
+    public virtual void DestroyObject()
+    {
+        HideHealthbars();
+        Destroy(this.gameObject, 0.05f);
+    }
+
 
 
     public Collider GetHighestCollider()
@@ -201,5 +241,6 @@ public class Damagable : MonoBehaviourPun
         }
         return col;
     }
+
 
 }

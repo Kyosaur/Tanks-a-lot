@@ -2097,8 +2097,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edd013a6995355044bf8b7a035048b12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Armour: 100
-  m_Health: 100
+  m_InitialArmour: 100
+  m_InitialHealth: 100
+  m_Armour: 0
+  m_Health: 0
   m_HealthbarDisplay: 0
   m_ArmourbarSlider: {fileID: 223122141084405106, guid: 83b626b0074b1034186878a5c8bf396f,
     type: 2}
@@ -2132,6 +2134,7 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 114222198396108692}
   - {fileID: 114199758706430464}
+  - {fileID: 114874354013555552}
   viewIdField: 0
   InstantiationId: 2
   isRuntimeInstantiated: 0

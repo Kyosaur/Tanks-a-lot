@@ -444,6 +444,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4519694365418906}
   - component: {fileID: 114479119800021950}
+  - component: {fileID: 114364989368682524}
   - component: {fileID: 114476326797917402}
   - component: {fileID: 65293170107003744}
   - component: {fileID: 195705573538242370}
@@ -1799,6 +1800,27 @@ Light:
   m_UseColorTemperature: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &114364989368682524
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1741041019987438}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  ObservedComponents:
+  - {fileID: 114476326797917402}
+  viewIdField: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!114 &114476326797917402
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1810,8 +1832,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e04f93521a7afcc44863e73ca861684d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Armour: 100
-  m_Health: 100
+  m_InitialArmour: 100
+  m_InitialHealth: 100
+  m_Armour: 0
+  m_Health: 0
   m_HealthbarDisplay: 0
   m_ArmourbarSlider: {fileID: 223122141084405106, guid: 83b626b0074b1034186878a5c8bf396f,
     type: 2}

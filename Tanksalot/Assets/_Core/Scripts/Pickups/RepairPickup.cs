@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class RepairPickup : MonoBehaviourPun {
 
+    [SerializeField] private float m_HealAmount = 100f;
+    [SerializeField] private float m_ArmourAmount = 100f;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -21,14 +24,13 @@ public class RepairPickup : MonoBehaviourPun {
             float health = obj.GetInitialHealth();
 
 
-            if (obj.m_Health < health || obj.m_Armour < armour)
+            if (obj.GetHealth() < health || obj.GetArmour() < armour)
             {
-                obj.m_Health = health;
-                obj.m_Armour = armour;
+                obj.SetHealth(obj.GetInitialHealth());
+                obj.SetArmour(obj.GetInitialArmour());
 
-                obj.ForceHealthUpdate();
 
-                this.photonView.RPC("RepairPickupDestroy", RpcTarget.MasterClient);
+                this.photonView.RPC("RepairPickupDestroy", RpcTarget.AllBuffered);
             }
         }
 
@@ -37,7 +39,9 @@ public class RepairPickup : MonoBehaviourPun {
     [PunRPC]
     public void RepairPickupDestroy()
     {
-        PhotonNetwork.Destroy(this.gameObject);
+        // PhotonNetwork.Destroy(this.gameObject);
+
+        this.gameObject.SetActive(false);
 
     }
 
